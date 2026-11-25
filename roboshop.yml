@@ -5,6 +5,7 @@
     sg_id: "sg-0fdf910f0d7d847cc"
     ami_id: "ami-0055977a6e828a4f4"
     domain_name: swarupmacha.online
+    action: create
     env: dev
     instances:
     - mongodb
@@ -23,10 +24,12 @@
         Name: "{{ item }}-{{ env }}"
     loop: "{{ instances }}"
     register: ec2_output
+    when: action == "create"
   
   - name: print the output 
     ansible.builtin.debug:
       msg: "{{ ec2_output }}"
+    when: action == "create"
 
   - name: create r53 records
     amazon.aws.route53:
@@ -38,7 +41,8 @@
       value: "{{ item.instances[0].private_ip_address }}"
       overwrite: true
       wait: true
-    loop: "{{ ec2_output.results }}" # list
+    loop: "{{ ec2_output.results }}"
+    when: action == "create"         # list
 
   - name: create r53 records
     amazon.aws.route53:
@@ -51,4 +55,26 @@
       overwrite: true
       wait: true
     loop: "{{ ec2_output.results }}" # list
-    when: item.item == "frontend"
+    when: #and
+    - item.item == "frontend"
+    - action == "create"
+
+  - name: delete r53 records
+    amazon.aws.route53:
+      zone: "{{ domain_name }}"
+      state: absent
+      record: "{{ item.item }}-{{ env }}.{{ domain_name }}" # mongodb-dev.daws88s.online, frontend-dev.daws88s.online
+      type: A
+      ttl: 1
+    loop: "{{ instances }}"
+    when: action == "destroy"
+
+
+  - name: deleting the instance
+    amazon.aws.ec2_instance:
+      state: absent
+      name: "{{ item }} - {{ env }}"
+      loop: "{{ instances }}"
+    when: action == "destroy"
+
+
