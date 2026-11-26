@@ -62,7 +62,7 @@
   
   - name: isntaling mongodb 
     ansible.builtin.dnf:
-      name: mongod
+      name: mongodb-org
       state: present
   
   - name: check products loaded
