@@ -50,3 +50,7 @@
       name: user
       state: started
       enabled: yes
+
+  # - name: deamon relaod
+  #   ansible.builtin.systemd_service:
+  #     deamon_reload: true
