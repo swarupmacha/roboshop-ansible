@@ -47,6 +47,7 @@
   
   - name: install depencies
     community.general.json:
+      path: /app
 
   - name: copying the catalogue repo
     ansible.builtin.copy:
