@@ -35,4 +35,18 @@
       dest: /app
       remote_src: yes
   
-  - name: isntalling the de
+  - name: isntalling the depencies
+    ansible.builtin.command: npm install
+    args:
+      chdir: /app
+  
+  - name: copying the user service
+    ansible.builtin.copy:
+      src: user.service
+      dest: /etc/systemd/system/user.service
+  
+  - name: starting the server 
+    ansible.builtin.service:
+      name: user
+      state: started
+      enabled: yes
