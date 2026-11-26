@@ -46,8 +46,9 @@
       remote_src: yes
   
   - name: install depencies
-    community.general.json:
-      path: /app
+    ansible.builtin.command: npm install
+    args:
+      chdir: /app
 
   - name: copying the catalogue repo
     ansible.builtin.copy:
