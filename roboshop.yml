@@ -1,32 +1,34 @@
-- name: creating ec2 and route53 records
+# ansible-playbook -i localhost,   -e '{"instances":["mongodb","catalogue","redis","user","cart","mysql","shipping","rabbitmq","payment","frontend"]}'  -e action=destroy roboshop.yaml
+- name: create ec2 and r53 records
   hosts: all
-  become: yes
+  connection: local
   vars:
     sg_id: "sg-0fdf910f0d7d847cc"
     ami_id: "ami-0055977a6e828a4f4"
     domain_name: swarupmacha.online
-    action: create
     env: dev
+    action: create
     instances:
     - mongodb
     - catalogue
   tasks:
-  - name: creating Ec2 instance
+  ### CREATE ###
+  - name: create ec2 instance
     amazon.aws.ec2_instance:
       instance_type: "t3.micro"
       security_group: "{{ sg_id }}"
       image_id: "{{ ami_id }}"
-      name: "{{ item }} - {{ env }}"
+      name: "{{ item }}-{{ env }}"
       tags:
-        project: roboshop
-        component: "{{ item }}"
-        env: "{{ env}}"
+        Project: roboshop
+        Component: "{{ item }}"
+        Environment: "{{ env }}"
         Name: "{{ item }}-{{ env }}"
     loop: "{{ instances }}"
     register: ec2_output
     when: action == "create"
-  
-  - name: print the output 
+
+  - name: print the output
     ansible.builtin.debug:
       msg: "{{ ec2_output }}"
     when: action == "create"
@@ -35,46 +37,57 @@
     amazon.aws.route53:
       state: present
       zone: "{{ domain_name }}"
-      record: "{{ item.item }}-{{ env }}.{{ domain_name }}" # mongodb-dev.daws88s.online, frontend-dev.daws88s.online
+      record: "{{ item.item }}-{{ env }}.{{ domain_name }}" # mongodb-dev.swarupmacha.online.online, frontend-dev.swarupmacha.online.online
       type: A
       ttl: 1
       value: "{{ item.instances[0].private_ip_address }}"
+      wait: false
       overwrite: true
-      wait: true
-    loop: "{{ ec2_output.results }}"
-    when: action == "create"         # list
+    loop: "{{ ec2_output.results }}" # list
+    when: action == "create"
 
-  - name: create r53 records
+  - name: create r53 record for frontend
     amazon.aws.route53:
       state: present
       zone: "{{ domain_name }}"
-      record: "roboshop-{{ env }}.{{ domain_name }}" # mongodb-dev.daws88s.online, frontend-dev.daws88s.online
+      record: "roboshop-{{ env }}.{{ domain_name }}" # roboshop-dev.swarupmacha.online.online
       type: A
       ttl: 1
       value: "{{ item.instances[0].public_ip_address }}"
+      wait: false
       overwrite: true
-      wait: true
-    loop: "{{ ec2_output.results }}" # list
-    when: #and
+    loop: "{{ ec2_output.results }}"
+    when:  # and
     - item.item == "frontend"
     - action == "create"
 
+  ### DESTROY ###
+  - name: delete r53 records for frontend
+    amazon.aws.route53:
+      state: absent
+      zone: "{{ domain_name }}"
+      record: "roboshop-{{ env }}.{{ domain_name }}" # roboshop-dev.swarupmacha.online.online
+      type: A
+      ttl: 1
+    loop: "{{ instances }}"
+    when:  # and
+    - item == "frontend"
+    - action == "destroy"
+
   - name: delete r53 records
     amazon.aws.route53:
-      zone: "{{ domain_name }}"
       state: absent
-      record: "{{ item.item }}-{{ env }}.{{ domain_name }}" # mongodb-dev.daws88s.online, frontend-dev.daws88s.online
+      zone: "{{ domain_name }}"
+      record: "{{ item }}-{{ env }}.{{ domain_name }}" # roboshop-dev.swarupmacha.online.online
       type: A
       ttl: 1
     loop: "{{ instances }}"
     when: action == "destroy"
 
-
-  - name: deleting the instance
+  - name: delete ec2 instance
     amazon.aws.ec2_instance:
       state: absent
-      name: "{{ item }} - {{ env }}"
+      name: "{{ item }}-{{ env }}"
+      wait: false
     loop: "{{ instances }}"
     when: action == "destroy"
-
-
