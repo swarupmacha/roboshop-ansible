@@ -3,7 +3,7 @@
   become: yes
   tasks:
   - name: copying rabbitmq service
-    ansibile.builtin.copy:
+    ansibile.builtin.template:
       src: rabbitmq.service
       dest: /etc/yum.repos.d/rabbitmq.repo
   
