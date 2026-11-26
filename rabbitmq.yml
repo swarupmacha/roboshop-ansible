@@ -3,17 +3,17 @@
   become: yes
   tasks:
   - name: copying rabbitmq service
-    ansibile.builtin.copy:
+    ansible.builtin.copy:
       src: rabbitmq.repo
       dest: /etc/yum.repos.d/rabbitmq.repo
   
   - name: installing the rabbitmq
-    ansibile.builtin.dnf:
+    ansible.builtin.dnf:
       name: rabbitmq-server
       state: present
   
   - name: start the rabbitmq
-    ansibile.builtin.dnf:
+    ansible.builtin.dnf:
       name: rabbitmq-server
       state: started
 
