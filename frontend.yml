@@ -1,50 +1,55 @@
-- name: configure frontend server
+- name: configuartion of frontend
   hosts: frontend
   become: yes
   tasks:
   - name: enable nginx 1.24
     ansible.builtin.command: dnf module enable nginx:1.24 -y
-
-  - name: install nginx
-    ansible.builtin.dnf:
-      name: nginx
+  
+  - name: installing the nginx
+    ansible.builtin.dnf: 
+      state: nginx
       state: present
-
-  - name: Remove the entire directory
+  
+  - name: rmeove default content
     ansible.builtin.file:
-      path: /usr/share/nginx/html
+      path: /usr/share/nginx/html 
       state: absent
-
+  
   - name: create html directory
     ansible.builtin.file:
-      path: /usr/share/nginx/html
+      path: /usr/share/nginx/html 
       state: directory
-
-  - name: download frontend
+  
+  - name: download frontend code
     ansible.builtin.get_url:
-      url: https://roboshop-artifacts.s3.amazonaws.com/frontend-v3.zip 
+      url: https://roboshop-artifacts.s3.amazonaws.com/frontend-v3.zip
       dest: /tmp/frontend.zip
-
-  - name: unarchieve frontend
+  
+  - name: unarchieve the frontend code
     ansible.builtin.unarchive:
-      src: /tmp/frontend.zip
-      dest: /usr/share/nginx/html
-      remote_src: yes
+     src: /tmp/frontend.zip
+     dest: /usr/share/nginx/html
+     remote_src: yes
 
-  - name: remove default nginx
+  - name: deleting the config file
     ansible.builtin.file:
-      state: absent
       path: /etc/nginx/nginx.conf
-
-  - name: copy nginx.conf
-    ansible.builtin.template:
+      state: absent
+  
+  - name: retrying the config file
+    ansible.builtin.file:
+      path: /etc/nginx/
+      state: directory
+  
+  - name: copy the config file
+    ansible.builtin.copy:
       src: nginx.conf
-      dest: /etc/nginx/nginx.conf
-
-  - name: resatrt nginx
+      dest: /etc/nginx/
+      
+  - name: restaring the nginx
     ansible.builtin.service:
       name: nginx
-      state: restarted
+      state: started
       enabled: yes
 
   
