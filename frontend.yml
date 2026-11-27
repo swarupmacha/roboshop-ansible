@@ -32,7 +32,7 @@
      remote_src: yes
 
   - name: deleting the config file
-    anisble.builtin.file:
+    ansible.builtin.file:
       path: /etc/nginx/nginx.conf
       state: absent
   
