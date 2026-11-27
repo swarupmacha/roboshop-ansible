@@ -38,13 +38,13 @@
   
   - name: retrying the config file
     ansible.builtin.file:
-      path: /etc/nginx/nginx.conf
+      path: /etc/nginx/
       state: directory
   
   - name: copy the config file
     ansible.builtin.copy:
       src: nginx.conf
-      dest: /etc/nginx/nginx.conf
+      dest: /etc/nginx/
       
   - name: restaring the nginx
     ansible.builtin.service:
